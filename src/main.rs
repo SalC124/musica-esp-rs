@@ -3,7 +3,7 @@ use esp_idf_svc::hal::{
     ledc::{config::TimerConfig, LedcDriver, LedcTimerDriver},
     peripherals::Peripherals,
 };
-use musica_esp_rs::buzzer::Buzzer;
+use musica_esp_rs::{buzzer::Buzzer, notes::{Note, NoteName}};
 
 fn main() {
     esp_idf_svc::sys::link_patches();
@@ -19,8 +19,14 @@ fn main() {
 
     let mut buzzer = Buzzer::new(pin.into(), ledc);
 
-    buzzer.start_tone(freq as u32);
-    FreeRtos::delay_ms(dur);
+    let bpm = 60;
+    let note = Note::new(NoteName::C(4), 1.0);
+
+    buzzer.start_tone(note.to_freq().unwrap());
+    FreeRtos::delay_ms(note.duration_ms(bpm));
+    buzzer.no_tone();
+    buzzer.start_tone(Note::new(NoteName::G(4), 0.5).to_freq().unwrap());
+    FreeRtos::delay_ms(500);
     buzzer.no_tone();
 
 //     let timer_config = TimerConfig::default().frequency((freq as u32).into());
