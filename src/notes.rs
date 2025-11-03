@@ -14,17 +14,15 @@ pub enum NoteName {
     Rest,
 }
 
-pub struct Note {
-    pub name: NoteName,
-    pub beats: f32,
-}
-
-impl Note {
-    pub fn new(name: NoteName, beats: f32) -> Self {
-        Self { name, beats }
+impl NoteName {
+    pub fn beats(self, beats: f32) -> Note {
+        Note {
+            name: self,
+            beats
+        }
     }
-    pub fn to_freq(&self) -> Option<u32> {
-        let (note_offset, octave) = match self.name {
+    pub fn freq(&self) -> Option<u32> {
+        let (note_offset, octave) = match self {
             NoteName::C(octave) => (0, octave),
             NoteName::CSharp(octave) => (1, octave),
             NoteName::D(octave) => (2, octave),
@@ -39,10 +37,27 @@ impl Note {
             NoteName::B(octave) => (11, octave),
             NoteName::Rest => return None,
         };
-        let semitones_from_c0 = (octave as i32) * 12 + note_offset;
-        let semitones_from_a4 = semitones_from_c0 - 49;
+        let semitones_from_c0: u32 = (*octave as u32 * 12) + note_offset;
+        let semitones_from_a4: u32 = semitones_from_c0 - 49;
         let frequency = 440.0 * 2_f64.powf(semitones_from_a4 as f64 / 12.0);
         Some(frequency.round() as u32)
+    }
+}
+
+#[macro_export] macro_rules! note {
+    ($name: ident $octave: literal | $beats: expr) => {
+        Note::new(NoteName::$name($octave), $beats as f32)
+    };
+}
+
+pub struct Note {
+    pub name: NoteName,
+    pub beats: f32,
+}
+
+impl Note {
+    pub fn new(name: NoteName, beats: f32) -> Self {
+        Self { name, beats }
     }
     pub fn duration_ms(&self, bpm: u32) -> u32 {
         // A quarter note gets one beat at any BPM
