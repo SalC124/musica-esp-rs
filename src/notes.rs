@@ -11,15 +11,12 @@ pub enum NoteName {
     A(u8),
     ASharp(u8),
     B(u8),
-    Rest,
+    R(u8),
 }
 
 impl NoteName {
     pub fn beats(self, beats: f32) -> Note {
-        Note {
-            name: self,
-            beats
-        }
+        Note { name: self, beats }
     }
     pub fn freq(&self) -> Option<u32> {
         let (note_offset, octave) = match self {
@@ -35,16 +32,17 @@ impl NoteName {
             NoteName::A(octave) => (9, octave),
             NoteName::ASharp(octave) => (10, octave),
             NoteName::B(octave) => (11, octave),
-            NoteName::Rest => return None,
+            NoteName::R(_) => return None,
         };
-        let semitones_from_c0: u32 = (*octave as u32 * 12) + note_offset;
-        let semitones_from_a4: u32 = semitones_from_c0 - 49;
+        let semitones_from_c0 = (*octave as i32 * 12) + note_offset;
+        let semitones_from_a4 = semitones_from_c0 - 49;
         let frequency = 440.0 * 2_f64.powf(semitones_from_a4 as f64 / 12.0);
         Some(frequency.round() as u32)
     }
 }
 
-#[macro_export] macro_rules! note {
+#[macro_export]
+macro_rules! note {
     ($name: ident $octave: literal | $beats: expr) => {
         Note::new(NoteName::$name($octave), $beats as f32)
     };
